@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -56,7 +55,6 @@ public class GameSimulationRunner {
      * avoids the birthday-problem bias and guarantees max 9 iterations.
      */
     @Async("simulationExecutor")
-    @Transactional
     public void run(String sessionId) {
         GameSession session = sessionRepository.findById(sessionId).orElseThrow();
         session.setStatus(SessionStatus.IN_PROGRESS);

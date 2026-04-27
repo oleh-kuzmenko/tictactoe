@@ -1,27 +1,12 @@
 package com.ttt.session.controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.ttt.session.model.GameSession;
 import com.ttt.session.service.GameSessionService;
-
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
-/**
- * REST controller for the Game Session Service.
- *
- * POST /sessions → create session (201 Created)
- * POST /sessions/{sessionId}/simulate → start simulation (202 Accepted)
- * GET /sessions/{sessionId} → get session details + move history
- */
 @Slf4j
 @RestController
 @RequestMapping("/sessions")
@@ -32,10 +17,10 @@ public class GameSessionController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public GameSession createSession(HttpServletResponse response) {
+    public GameSessionResponseDto createSession(HttpServletResponse response) {
         log.info("Creating new game session");
-        GameSession session = sessionService.createSession();
-        response.setHeader("Location", "/api/session/" + session.getId());
+        GameSessionResponseDto session = GameSessionResponseDto.fromEntity(sessionService.createSession());
+        response.setHeader("Location", "/api/session/" + session.id());
         return session;
     }
 
@@ -47,9 +32,8 @@ public class GameSessionController {
     }
 
     @GetMapping("/{sessionId}")
-    public GameSession getSession(@PathVariable String sessionId) {
+    public GameSessionResponseDto getSession(@PathVariable String sessionId) {
         log.info("Fetching session details for session: {}", sessionId);
-        return sessionService.getSession(sessionId);
+        return GameSessionResponseDto.fromEntity(sessionService.getSession(sessionId));
     }
-
 }

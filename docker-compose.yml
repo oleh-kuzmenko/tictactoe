@@ -1,7 +1,6 @@
-version: '3.9'
-
 services:
-  # 1. Eureka Server
+
+  # ── 1. Eureka Discovery Server ───────────────────────────────────────────────
   discovery-server:
     build: ./discovery-server
     image: tictactoe/discovery-server
@@ -15,7 +14,8 @@ services:
       retries: 10
       start_period: 30s
 
-  # 2. Game Engine
+  # ── 2. Game Engine Service ───────────────────────────────────────────────────
+  # Port 8081 intentionally not exposed — internal traffic only via Docker service name.
   game-engine-service:
     build: ./game-engine-service
     image: tictactoe/game-engine-service
@@ -30,10 +30,12 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health | grep -q 'UP' || exit 1"]
       interval: 10s
+      timeout: 5s
       retries: 5
       start_period: 30s
 
-  # 3. Game Session
+  # ── 3. Game Session Service ──────────────────────────────────────────────────
+  # Port 8082 intentionally not exposed — accessed by UI via api-gateway only.
   game-session-service:
     build: ./game-session-service
     image: tictactoe/game-session-service
@@ -50,7 +52,7 @@ services:
       game-engine-service:
         condition: service_healthy
 
-  # 4. API Gateway
+  # ── 4. API Gateway ───────────────────────────────────────────────────────────
   api-gateway:
     build: ./api-gateway
     image: tictactoe/api-gateway
@@ -64,12 +66,20 @@ services:
     depends_on:
       discovery-server:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
-  # 5. UI Service
+  # ── 5. UI Service ────────────────────────────────────────────────────────────
   ui-service:
     build: ./ui-service
     image: tictactoe/ui-service
     container_name: ui-service
+    ports:
+      - "8083:8083"
     environment:
       - SESSION_SERVICE_URL=http://game-session-service:8082
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
@@ -79,4 +89,5 @@ services:
       discovery-server:
         condition: service_healthy
       api-gateway:
-        condition: service_started
+        condition: service_healthy
+        
