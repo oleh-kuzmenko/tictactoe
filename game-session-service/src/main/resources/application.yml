@@ -1,0 +1,52 @@
+server:
+  port: ${SERVER_PORT:8082}
+
+spring:
+  application:
+    name: game-session-service
+  datasource:
+    url: jdbc:h2:mem:sessiondb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  cloud:
+    openfeign:
+      client:
+        config:
+          game-engine-client:
+            connect-timeout: 2000
+            read-timeout: 2000
+            logger-level: basic
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+engine:
+  base-url: ${ENGINE_BASE_URL:http://localhost:8081}
+
+simulation:
+  move-delay-ms: 500
+
+logging:
+  level:
+    com.ttt.session.client.GameEngineClient: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+        

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tic Tac Toe</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="winner-overlay">
+      <div id="winner-card">
+        <button
+          id="btn-close-overlay"
+          onclick="hideOverlay()"
+          title="Close and view board"
+        >
+          ×
+        </button>
+        <div id="winner-title">Game Finished</div>
+        <div id="winner-name"></div>
+        <button id="btn-play-again" onclick="resetGame()">Play Again</button>
+      </div>
+    </div>
+
+    <div id="ws-indicator">
+      <span id="ws-dot"></span>
+      <span id="ws-label">disconnected</span>
+    </div>
+
+    <header>
+      <h2>
+        <span class="x">X</span> vs <span class="o">O</span> · Tic Tac Toe
+      </h2>
+    </header>
+
+    <div id="status-bar">Ready to simulate</div>
+
+    <div id="board"></div>
+
+    <div id="controls">
+      <button id="btn-start" onclick="startGame()">▶ Start Simulation</button>
+      <button id="btn-reset" onclick="resetGame()">↺ Reset</button>
+    </div>
+
+    <div id="log-container">
+      <h3>Move History</h3>
+      <ul id="move-log"></ul>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

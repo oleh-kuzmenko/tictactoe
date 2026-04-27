@@ -1,0 +1,82 @@
+version: '3.9'
+
+services:
+  # 1. Eureka Server
+  discovery-server:
+    build: ./discovery-server
+    image: tictactoe/discovery-server
+    container_name: discovery-server
+    ports:
+      - "${EUREKA_PORT:-8761}:8761"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # 2. Game Engine
+  game-engine-service:
+    build: ./game-engine-service
+    image: tictactoe/game-engine-service
+    container_name: game-engine-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - SERVER_PORT=8081
+    restart: on-failure
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  # 3. Game Session
+  game-session-service:
+    build: ./game-session-service
+    image: tictactoe/game-session-service
+    container_name: game-session-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - ENGINE_BASE_URL=http://game-engine-service:8081
+      - SIMULATION_MOVE_DELAY_MS=${MOVE_DELAY:-500}
+      - SERVER_PORT=8082
+    restart: on-failure
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      game-engine-service:
+        condition: service_healthy
+
+  # 4. API Gateway
+  api-gateway:
+    build: ./api-gateway
+    image: tictactoe/api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - SERVER_PORT=8080
+    restart: on-failure
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+
+  # 5. UI Service
+  ui-service:
+    build: ./ui-service
+    image: tictactoe/ui-service
+    container_name: ui-service
+    environment:
+      - SESSION_SERVICE_URL=http://game-session-service:8082
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - SERVER_PORT=8083
+    restart: on-failure
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      api-gateway:
+        condition: service_started
